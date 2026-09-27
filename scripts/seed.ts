@@ -14,7 +14,7 @@
  * Zdjęć nie wgrywa — każdy slot dostaje opis, co ma tam wejść.
  */
 import { createClient } from "@sanity/client";
-import { offerPages, offerHrefs, photo } from "./offer-pages";
+import { offerPages, offerPageRef, photo } from "./offer-pages";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
@@ -112,7 +112,7 @@ const offers = [
     _id: "offer-kawa-na-event",
     _type: "offer",
     title: "Kawa na event",
-    href: offerHrefs["offer-kawa-na-event"],
+    page: offerPageRef("offer-kawa-na-event"),
     photo: photo("foto — kawa na event"),
     order: 1,
     tilt: -1.2,
@@ -122,7 +122,7 @@ const offers = [
     _id: "offer-barista-na-targi",
     _type: "offer",
     title: "Barista na targi",
-    href: offerHrefs["offer-barista-na-targi"],
+    page: offerPageRef("offer-barista-na-targi"),
     photo: photo("foto — barista na targach"),
     order: 2,
     tilt: 1,
@@ -132,7 +132,7 @@ const offers = [
     _id: "offer-kawa-na-wesele",
     _type: "offer",
     title: "Kawa na wesele",
-    href: offerHrefs["offer-kawa-na-wesele"],
+    page: offerPageRef("offer-kawa-na-wesele"),
     photo: photo("foto — bar na weselu"),
     order: 3,
     tilt: 1.4,
@@ -142,7 +142,7 @@ const offers = [
     _id: "offer-bar-z-lemoniada",
     _type: "offer",
     title: "Bar z lemoniadą",
-    href: offerHrefs["offer-bar-z-lemoniada"],
+    page: offerPageRef("offer-bar-z-lemoniada"),
     photo: photo("foto — bar z lemoniadą"),
     order: 4,
     wide: true,
@@ -177,10 +177,12 @@ async function main() {
   }
 
   // Usługi i podstrony zostawiamy w spokoju, jeśli już istnieją — mogły zostać ręcznie poprawione.
-  for (const doc of offers as SeedDoc[]) {
+  // Podstrony przed kaflami: kafel trzyma twardą referencję do podstrony, więc musi
+  // ją zastać, a nie odwrotnie.
+  for (const doc of offerPages as unknown as SeedDoc[]) {
     tx.createIfNotExists(doc);
   }
-  for (const doc of offerPages as unknown as SeedDoc[]) {
+  for (const doc of offers as SeedDoc[]) {
     tx.createIfNotExists(doc);
   }
 

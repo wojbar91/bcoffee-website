@@ -1,4 +1,6 @@
 import { defineField, defineType } from "sanity";
+// Ścieżka względna, nie alias `@/`: schemy czyta też CLI Sanity, który aliasów z tsconfig nie zna.
+import { RESERVED_SLUGS, SLUG_PATTERN } from "../../lib/slug";
 
 /**
  * Podstrona ofertowa. Jeden typ obsługuje wszystkie cztery (event, targi,
@@ -36,7 +38,18 @@ export const offerPage = defineType({
       group: "hero",
       options: { source: "title", maxLength: 60 },
       description: 'Fragment URL-a, np. "kawa-na-event" → bcoffee.pl/kawa-na-event',
-      validation: (r) => r.required(),
+      validation: (r) =>
+        r.required().custom((value: { current?: string } | undefined) => {
+          const current = value?.current;
+          if (!current) return true;
+          if (!SLUG_PATTERN.test(current)) {
+            return "Tylko małe litery bez polskich znaków, cyfry i pojedyncze myślniki, np. kawa-na-event.";
+          }
+          if (RESERVED_SLUGS.includes(current)) {
+            return `Adres „${current}" jest zajęty przez inną część serwisu — podstrona byłaby niewidoczna.`;
+          }
+          return true;
+        }),
     }),
     defineField({
       name: "order",
@@ -120,7 +133,13 @@ export const offerPage = defineType({
 
     defineField({ name: "galleryPhotos", title: "Zdjęcia", type: "array", of: [{ type: "photo" }], group: "gallery" }),
 
-    defineField({ name: "metaTitle", title: "Tytuł w Google", type: "string", group: "seo" }),
+    defineField({
+      name: "metaTitle",
+      title: "Tytuł w Google",
+      type: "string",
+      group: "seo",
+      description: "Bez nazwy firmy — „ — B. Coffee” dopisuje się na końcu sama. Puste pole = tytuł podstrony.",
+    }),
     defineField({ name: "metaDescription", title: "Opis w Google", type: "text", rows: 3, group: "seo", validation: (r) => r.max(200) }),
   ],
   orderings: [{ name: "order", title: "Kolejność", by: [{ field: "order", direction: "asc" }] }],

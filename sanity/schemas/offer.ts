@@ -6,12 +6,30 @@ export const offer = defineType({
   type: "document",
   fields: [
     defineField({ name: "title", title: "Nazwa", type: "string", validation: (r) => r.required() }),
+    /**
+     * Referencja zamiast wpisywanego adresu. Wcześniej kafel trzymał tekst "/kawa-na-event"
+     * — zmiana adresu podstrony zostawiała kafel prowadzący do 404, a skasowanie podstrony
+     * nie ostrzegało, że coś na nią wskazuje. Referencja idzie za zmianą adresu sama,
+     * a Sanity nie pozwoli skasować podstrony, do której prowadzi kafel.
+     */
+    defineField({
+      name: "page",
+      title: "Podstrona",
+      type: "reference",
+      to: [{ type: "offerPage" }],
+      description: "Dokąd prowadzi kafel. Adres zaktualizuje się sam, gdy zmienisz go na podstronie.",
+      validation: (r) =>
+        r.custom((page, ctx) => {
+          const href = (ctx.parent as { href?: string } | undefined)?.href;
+          return page || href ? true : "Wybierz podstronę albo podaj adres zewnętrzny.";
+        }),
+    }),
     defineField({
       name: "href",
-      title: "Adres",
+      title: "Adres zewnętrzny",
       type: "string",
-      description: 'Trasa wewnętrzna ("/kawa-na-wesele") albo pełny URL do starego serwisu.',
-      validation: (r) => r.required(),
+      description: "Tylko gdy kafel ma prowadzić poza podstrony, np. pełny adres sklepu. Przy wybranej podstronie jest pomijany.",
+      hidden: ({ parent }) => Boolean(parent?.page),
     }),
     defineField({ name: "photo", title: "Zdjęcie", type: "photo", validation: (r) => r.required() }),
     defineField({
@@ -60,10 +78,10 @@ export const offer = defineType({
   ],
   orderings: [{ name: "order", title: "Kolejność", by: [{ field: "order", direction: "asc" }] }],
   preview: {
-    select: { title: "title", subtitle: "href", media: "photo.asset", wide: "wide" },
-    prepare: ({ title, subtitle, media, wide }) => ({
+    select: { title: "title", pageSlug: "page.slug.current", href: "href", media: "photo.asset", wide: "wide" },
+    prepare: ({ title, pageSlug, href, media, wide }) => ({
       title: wide ? `${title} (szeroki)` : title,
-      subtitle,
+      subtitle: pageSlug ? `/${pageSlug}` : href || "⚠ brak celu",
       media,
     }),
   },

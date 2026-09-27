@@ -26,6 +26,12 @@ export const siteSettingsQuery = defineQuery(`*[_type == "siteSettings"][0]{
   shopUrl, instagramUrl, instagramHandle, facebookUrl
 }`);
 
+/**
+ * Kafle usług (`offers`): adres bierzemy z referencji do podstrony, a dopiero gdy jej
+ * nie ma — z pola tekstowego (link zewnętrzny albo kafel sprzed migracji). Filtr
+ * odrzuca kafel bez żadnego celu, np. wskazujący na podstronę zapisaną tylko jako
+ * szkic: bez niego `href` byłby null, a AppLink wywaliłby render całej strony głównej.
+ */
 export const homePageQuery = defineQuery(`{
   "page": *[_type == "homePage"][0]{
     heroVariant, heroEyebrow, heroTitle, heroTitleHand, heroLead,
@@ -47,8 +53,9 @@ export const homePageQuery = defineQuery(`{
     instagramTitle, instagramTitleHand,
     instagramPhotos[]{${photoFields}}
   },
-  "offers": *[_type == "offer"] | order(order asc){
-    _id, title, href, tilt, wide, eyebrow, body, ctaLabel,
+  "offers": *[_type == "offer" && (defined(page->slug.current) || defined(href))] | order(order asc){
+    _id, title, tilt, wide, eyebrow, body, ctaLabel,
+    "href": coalesce("/" + page->slug.current, href),
     photo{${photoFields}}
   }
 }`);

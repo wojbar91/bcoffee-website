@@ -1,12 +1,13 @@
-"use client";
-
 import * as React from "react";
-import { useState } from "react";
 import { AppLink } from "./AppLink";
 
 /**
  * The one clickable shape in the system: an outlined pill with a hard offset shadow
  * that lifts toward the top-left on hover.
+ *
+ * Bez "use client": ruch na najechanie robi CSS (.bc-btn--lift / .bc-btn--fill
+ * w styles/layout.css). Użyty w komponencie serwerowym nie wysyła do przeglądarki
+ * ani bajta JS; w klienckim (formularz, sekcja kontaktowa) trafia do ich paczki.
  */
 export interface ButtonProps {
   children?: React.ReactNode;
@@ -28,8 +29,9 @@ const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, React.CSSProperties>
   gold: { background: "var(--surface-highlight)", color: "var(--text-on-accent)", border: "var(--border)", boxShadow: "var(--shadow-md)" },
   cream: { background: "var(--surface-card)", color: "var(--text-body)", border: "var(--border)", boxShadow: "var(--shadow-md)" },
   dark: { background: "var(--surface-dark)", color: "var(--text-on-dark)", border: "var(--border)", boxShadow: "none" },
-  outline: { background: "transparent", color: "var(--text-body)", border: "var(--border)", boxShadow: "none" },
-  onPhoto: { background: "transparent", color: "var(--text-on-dark)", border: "2px solid oklch(1 0 0 / 0.5)", boxShadow: "none" },
+  // Te dwa nie mają tła w style: przezroczyste tło i złote na hover daje .bc-btn--fill.
+  outline: { color: "var(--text-body)", border: "var(--border)", boxShadow: "none" },
+  onPhoto: { color: "var(--text-on-dark)", border: "2px solid oklch(1 0 0 / 0.5)", boxShadow: "none" },
 };
 
 const SIZES: Record<NonNullable<ButtonProps["size"]>, React.CSSProperties> = {
@@ -51,8 +53,10 @@ export function Button({
   style,
   ...rest
 }: ButtonProps) {
-  const [hover, setHover] = useState(false);
+  // Pełne przyciski unoszą się na najechanie, przezroczyste wypełniają na złoto.
   const lifts = variant !== "outline" && variant !== "onPhoto";
+  const classes = ["bc-btn", lifts ? "bc-btn--lift" : "bc-btn--fill", className].filter(Boolean).join(" ");
+
   const base: React.CSSProperties = {
     fontFamily: "var(--font-display)",
     fontWeight: "var(--weight-strong)" as React.CSSProperties["fontWeight"],
@@ -64,24 +68,23 @@ export function Button({
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.45 : 1,
     transition: "transform var(--dur-fast) var(--ease), background var(--dur) var(--ease)",
-    transform: hover && !disabled && lifts ? "var(--lift)" : "none",
     ...SIZES[size],
     ...(VARIANTS[variant] || VARIANTS.primary),
-    ...(hover && !disabled && !lifts ? { background: "var(--surface-highlight)" } : null),
     ...style,
   };
-  const handlers = { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) };
 
   if (href) {
     return (
-      <AppLink href={href} className={className} style={base} onClick={onClick} {...handlers} {...rest}>
+      // `aria-disabled`, bo link nie ma atrybutu disabled — a CSS po nim poznaje,
+      // że nie ma się ruszać na najechanie.
+      <AppLink href={href} className={classes} style={base} onClick={onClick} aria-disabled={disabled || undefined} {...rest}>
         {children}
       </AppLink>
     );
   }
 
   return (
-    <button type={type} className={className} style={base} onClick={onClick} disabled={disabled} {...handlers} {...rest}>
+    <button type={type} className={classes} style={base} onClick={onClick} disabled={disabled} {...rest}>
       {children}
     </button>
   );

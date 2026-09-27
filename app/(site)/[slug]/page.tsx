@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { OfferPageScreen } from "@/components/site/OfferPageScreen";
 import { ContactSection } from "@/components/site/ContactSection";
 import { requireDoc, sanityFetch } from "@/sanity/lib/fetch";
-import { pageMetadata } from "@/lib/seo";
+import { NOT_FOUND_METADATA, pageMetadata } from "@/lib/seo";
+import { isValidSlug } from "@/lib/slug";
 import { contactSectionQuery, offerPageQuery, offerPageSlugsQuery, siteSettingsQuery } from "@/sanity/queries";
 import type { ContactSection as ContactSectionData, OfferPage, SiteSettings } from "@/sanity/types";
 
@@ -15,12 +16,15 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
+  // Bez tego 404 dziedziczyło tytuł strony głównej — zakładka i wynik wyszukiwania
+  // udawały, że trafiłeś na stronę główną.
+  if (!isValidSlug(slug)) return NOT_FOUND_METADATA;
 
   // Ustawienia dopiero po sprawdzeniu, czy podstrona w ogóle istnieje — tak samo jak
   // niżej w komponencie. Inaczej nieznany adres kosztowałby dwa zapytania na metadane
   // i trzecie na render, mimo że i tak kończy się na 404.
   const page = await sanityFetch<OfferPage | null>({ query: offerPageQuery, params: { slug } });
-  if (!page) return {};
+  if (!page) return NOT_FOUND_METADATA;
 
   const settings = await sanityFetch<SiteSettings | null>({ query: siteSettingsQuery });
 
@@ -42,7 +46,12 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
    * bo `dynamicParams` musi zostać włączone: `generateStaticParams` wykonuje się
    * przy budowaniu, więc podstrona dodana w Studio po deployu byłaby inaczej
    * nieosiągalna aż do kolejnego wdrożenia.
+   *
+   * Adres, który nie może być slugiem (`/wp-login.php`, `/.env` — codzienność każdej
+   * publicznej strony), odpada, zanim w ogóle zapytamy Sanity.
    */
+  if (!isValidSlug(slug)) notFound();
+
   const page = await sanityFetch<OfferPage | null>({ query: offerPageQuery, params: { slug } });
   if (!page) notFound();
 

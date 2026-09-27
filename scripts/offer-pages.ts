@@ -166,3 +166,8 @@ export const offerHrefs: Record<string, string> = {
   "offer-kawa-na-wesele": "/kawa-na-wesele",
   "offer-bar-z-lemoniada": "/bar-z-lemoniada",
 };
+
+/** Referencja kafla do jego podstrony. Id podstrony to zawsze "offerPage-" + slug. */
+export function offerPageRef(offerId: string): { _type: "reference"; _ref: string } {
+  return { _type: "reference", _ref: `offerPage-${offerHrefs[offerId].replace(/^\//, "")}` };
+}

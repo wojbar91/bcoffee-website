@@ -5,11 +5,15 @@ import { LEGAL_SUBTITLE, type LegalDoc } from "@/lib/legal";
  * w treści. Adres celowo został ten sam — dokument jest zaindeksowany w Google,
  * a linki w stopce już na niego wskazują.
  *
- * UWAGA przy najbliższej aktualizacji: § 5 ust. 3 i 4 mówią o plikach cookies
- * „w celach statystycznych, funkcjonalnych oraz marketingowych". Nowa strona nie
- * zapisuje żadnych ciasteczek i nie ma ani analityki, ani pikseli reklamowych,
- * więc te dwa ustępy opisują stan, który już nie istnieje. Zostawione bez zmian
- * świadomie — to tekst prawny i jego skracanie jest decyzją właściciela, nie moją.
+ * Odstępstwo od oryginału: § 5 mówił o cookies „w celach statystycznych, funkcjonalnych
+ * oraz marketingowych" i o zgodzie wyrażanej ustawieniami przeglądarki. Serwis nie
+ * zapisuje żadnych ciasteczek i nie ma analityki ani pikseli reklamowych — sprawdzone
+ * w kodzie i na nagłówkach wdrożonej strony — więc oba ustępy opisywały stan, który nie
+ * istnieje. Zastąpione jednym zdaniem stwierdzającym, jak jest.
+ *
+ * Gdyby kiedyś doszła analityka, mapa Google, film z YouTube albo widget z Instagrama,
+ * trzeba wrócić i do tego paragrafu, i do polityki prywatności — a wtedy potrzebny jest
+ * też baner zgody.
  */
 export const regulamin: LegalDoc = {
   title: "Regulamin strony internetowej",
@@ -57,12 +61,11 @@ export const regulamin: LegalDoc = {
       ],
     },
     {
-      heading: "§5. Dane osobowe i pliki cookies",
+      heading: "§5. Dane osobowe",
       blocks: [
         { kind: "para", text: "1. Administratorem danych osobowych przetwarzanych w związku z korzystaniem z Serwisu, w tym danych podanych w Formularzu kontaktowym, jest Usługodawca." },
         { kind: "para", text: "2. Zasady przetwarzania danych osobowych, cele i podstawy prawne przetwarzania oraz prawa przysługujące Użytkownikom określa Polityka Prywatności dostępna w Serwisie." },
-        { kind: "para", text: "3. Serwis wykorzystuje pliki cookies (i podobne technologie) w celach m.in. statystycznych, funkcjonalnych oraz marketingowych. Szczegółowe informacje na temat cookies, ich rodzajów oraz sposobu zarządzania nimi znajdują się w Polityce Prywatności / informacji o plikach cookies dostępnej w Serwisie." },
-        { kind: "para", text: "4. Korzystanie z Serwisu z niezmienionymi ustawieniami przeglądarki dotyczącymi cookies oznacza akceptację wykorzystywania plików cookies zgodnie z Polityką Prywatności; Użytkownik może w każdej chwili zmienić ustawienia przeglądarki w tym zakresie." },
+        { kind: "para", text: "3. Serwis nie wykorzystuje plików cookies ani podobnych technologii i nie zapisuje żadnych informacji na urządzeniu Użytkownika." },
       ],
     },
     {

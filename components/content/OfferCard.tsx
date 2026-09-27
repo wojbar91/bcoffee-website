@@ -1,7 +1,4 @@
-"use client";
-
 import * as React from "react";
-import { useState } from "react";
 import { AppLink } from "../core/AppLink";
 import { CmsPhoto } from "../media/CmsPhoto";
 import type { Photo } from "@/sanity/types";
@@ -10,6 +7,9 @@ import type { Photo } from "@/sanity/types";
  * A service tile: photo on top, title and an arrow below, tilted at rest and
  * straightening on hover. `wide` switches to the gold full-width variant used
  * to give one service more weight than its siblings.
+ *
+ * Bez "use client": to zwykły link, a ruch na najechanie robi CSS
+ * (.bc-straighten / .bc-lift-lg w styles/layout.css).
  */
 export interface OfferCardProps {
   title?: string;
@@ -42,14 +42,11 @@ export function OfferCard({
   style,
   ...rest
 }: OfferCardProps) {
-  const [hover, setHover] = useState(false);
-  const handlers = { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) };
-
   if (wide) {
     return (
       <AppLink
         href={href}
-        className={["bc-offercard-wide", className].filter(Boolean).join(" ")}
+        className={["bc-offercard-wide", "bc-lift-lg", className].filter(Boolean).join(" ")}
         style={{
           display: "grid",
           gridTemplateColumns: "1.15fr 1fr",
@@ -59,10 +56,8 @@ export function OfferCard({
           border: "var(--border)",
           boxShadow: "var(--shadow-xl)",
           transition: "transform var(--dur) var(--ease)",
-          transform: hover ? "var(--lift-lg)" : "none",
           ...style,
         }}
-        {...handlers}
         {...rest}
       >
         <div style={{ padding: "44px 42px" }}>
@@ -125,19 +120,20 @@ export function OfferCard({
   return (
     <AppLink
       href={href}
-      className={className}
-      style={{
-        display: "block",
-        borderRadius: "var(--radius-card)",
-        overflow: "hidden",
-        background: "var(--surface-card)",
-        border: "var(--border)",
-        boxShadow: "var(--shadow-lg)",
-        transition: "transform var(--dur) var(--ease)",
-        transform: hover ? "rotate(0deg) translateY(-4px)" : `rotate(${tilt}deg)`,
-        ...style,
-      }}
-      {...handlers}
+      className={["bc-tilt", "bc-straighten", className].filter(Boolean).join(" ")}
+      style={
+        {
+          display: "block",
+          borderRadius: "var(--radius-card)",
+          overflow: "hidden",
+          background: "var(--surface-card)",
+          border: "var(--border)",
+          boxShadow: "var(--shadow-lg)",
+          transition: "transform var(--dur) var(--ease)",
+          "--bc-tilt": `rotate(${tilt}deg)`,
+          ...style,
+        } as React.CSSProperties
+      }
       {...rest}
     >
       <CmsPhoto photo={photo} ratio="4 / 3" sizes="(max-width: 899px) 100vw, 33vw" style={{ borderBottom: "var(--border)" }} />

@@ -19,6 +19,29 @@
   --header-gap: 36px;
 }
 
+/* Zmienne ustawiane inline z komponentów (style={{ "--cols": … }}).
+
+   Rejestracja przez @property robi dwie rzeczy. Po pierwsze deklaruje je w CSS,
+   więc edytor przestaje je zgłaszać jako nierozwiązane. Po drugie — i to jest ważniejsze —
+   `inherits: false` wyłącza dziedziczenie. Zwykła zmienna CSS spływa w dół drzewa:
+   siatka `.bc-grid` bez własnego --cols zagnieżdżona w innej przejęłaby kolumny rodzica
+   zamiast wartości domyślnej, a karta bez przechyłu w przechylonym kaflu — jego obrót.
+   Bez `initial-value` niezarejestrowana wartość jest pusta, więc działa fallback z var(). */
+@property --cols {
+  syntax: "*";
+  inherits: false;
+}
+
+@property --cols-narrow {
+  syntax: "*";
+  inherits: false;
+}
+
+@property --bc-tilt {
+  syntax: "*";
+  inherits: false;
+}
+
 /* Poniżej 900px siatki zwijają się do jednej kolumny — tak chciał kit. */
 @media (max-width: 899px) {
   :root {
@@ -135,6 +158,59 @@
   padding: 9px 12px;
   margin: -9px -12px;
   border-radius: var(--radius-input);
+}
+
+/* Ruch przycisków, kart i kafli na najechanie.
+
+   Wcześniej trzymany w useState i ustawiany inline. Przez to Button, Card
+   i OfferCard musiały być komponentami klienckimi — każdy przycisk na stronie
+   ładował JS i się hydratował — efekt nie działał z klawiatury, a na telefonie
+   zostawał „przyklejony" po tapnięciu. CSS robi to samo bez JS.
+
+   Spoczynkowy przechył idzie przez zmienną --bc-tilt, a nie inline, bo transform
+   ustawiony w atrybucie style wygrywałby z :hover. `.bc-untilt` wyżej dalej go
+   zeruje na wąskim ekranie — ma !important, więc wygrywa i z tym, i z ruchem. */
+.bc-tilt {
+  transform: var(--bc-tilt, none);
+}
+
+/* Tło przycisków przezroczystych siedzi tu, a nie w style, z tego samego powodu:
+   inline nie dałoby się go podmienić na :hover. */
+.bc-btn--fill {
+  background: transparent;
+}
+
+/* Tylko urządzenia, które naprawdę mają kursor. Dotyk emuluje :hover przy tapnięciu
+   i zostawia go do następnego dotknięcia gdziekolwiek indziej. */
+/* Dwa osobne :not() zamiast listy w jednym — znaczą to samo, a listę selektorów wewnątrz
+   :not() część parserów (w tym inspekcje edytora) zgłasza jako błąd składni. */
+@media (hover: hover) {
+  .bc-btn--lift:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: var(--lift);
+  }
+  .bc-btn--fill:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--surface-highlight);
+  }
+  .bc-straighten:hover {
+    transform: rotate(0deg) translateY(-4px);
+  }
+  .bc-lift-lg:hover {
+    transform: var(--lift-lg);
+  }
+}
+
+/* Z klawiatury ten sam sygnał co myszą — dotąd fokus dawał tylko obrys. */
+.bc-btn--lift:focus-visible {
+  transform: var(--lift);
+}
+.bc-btn--fill:focus-visible {
+  background: var(--surface-highlight);
+}
+.bc-straighten:focus-visible {
+  transform: rotate(0deg) translateY(-4px);
+}
+.bc-lift-lg:focus-visible {
+  transform: var(--lift-lg);
 }
 
 /* Focus widoczny z klawiatury. Kit polegał wyłącznie na :focus w polach formularza. */

@@ -1,10 +1,12 @@
-"use client";
-
 import * as React from "react";
-import { useState } from "react";
 import { AppLink } from "./AppLink";
 
-/** Outlined surface with a hard shadow and an optional tilt. Every block on the site is one of these. */
+/**
+ * Outlined surface with a hard shadow and an optional tilt. Every block on the site is one of these.
+ *
+ * Bez "use client": przechył spoczynkowy idzie przez zmienną --bc-tilt, a prostowanie
+ * na najechanie robi .bc-straighten w styles/layout.css.
+ */
 export interface CardProps {
   children?: React.ReactNode;
   /** paper (default) · sunken · accent (turquoise) · gold · dark (brown, cream type) */
@@ -44,36 +46,34 @@ export function Card({
   style,
   ...rest
 }: CardProps) {
-  const [hover, setHover] = useState(false);
   const interactive = Boolean(href) || Boolean(onClick);
-  const s: React.CSSProperties = {
+  // Karta z przechyłem i wyłączonym prostowaniem zostaje przechylona także na hover —
+  // tak było w kicie. Pozostałe interaktywne unoszą się i prostują.
+  const moves = interactive && (straightenOnHover || !tilt);
+  const classes = ["bc-tilt", moves && "bc-straighten", className].filter(Boolean).join(" ");
+
+  const s = {
     border: "var(--border)",
     borderRadius: `var(--radius-${radius})`,
     boxShadow: shadow === "none" ? "none" : `var(--shadow-${shadow})`,
     padding,
     display: "block",
-    transform:
-      tilt && !(hover && interactive && straightenOnHover)
-        ? `rotate(${tilt}deg)`
-        : hover && interactive
-          ? "rotate(0deg) translateY(-4px)"
-          : "none",
     transition: "transform var(--dur-slow) var(--ease)",
+    ...(tilt ? { "--bc-tilt": `rotate(${tilt}deg)` } : null),
     ...(TONES[tone] || TONES.paper),
     ...style,
-  };
-  const handlers = interactive ? { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) } : {};
+  } as React.CSSProperties;
 
   if (href) {
     return (
-      <AppLink href={href} className={className} style={s} onClick={onClick} {...handlers} {...rest}>
+      <AppLink href={href} className={classes} style={s} onClick={onClick} {...rest}>
         {children}
       </AppLink>
     );
   }
 
   return (
-    <div className={className} style={s} onClick={onClick} {...handlers} {...rest}>
+    <div className={classes} style={s} onClick={onClick} {...rest}>
       {children}
     </div>
   );

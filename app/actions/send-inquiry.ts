@@ -28,7 +28,9 @@ export interface InquiryResult {
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
 const MAX_TRACKED = 5000;
+const PRUNE_EVERY_MS = 60 * 1000;
 const hits = new Map<string, number[]>();
+let lastPrune = 0;
 
 /** Usuwa wygasłe wpisy. Wcześniej mapa była czyszczona w całości po przekroczeniu
  *  progu, co kasowało też liczniki tym, którzy właśnie wyczerpali limit —
@@ -49,7 +51,13 @@ function isRateLimited(key: string): boolean {
 
 function recordHit(key: string): void {
   const now = Date.now();
-  if (hits.size >= MAX_TRACKED) prune(now);
+  // Najwyżej raz na minutę. Gdy wszystkie wpisy są świeże — czyli przy zalewie z wielu
+  // adresów naraz — sprzątanie nic nie usuwa, a bez tego progu przechodziłoby całą mapę
+  // przy każdym kolejnym żądaniu, spowalniając limiter akurat wtedy, gdy jest potrzebny.
+  if (hits.size >= MAX_TRACKED && now - lastPrune >= PRUNE_EVERY_MS) {
+    prune(now);
+    lastPrune = now;
+  }
 
   const recent = (hits.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
   recent.push(now);

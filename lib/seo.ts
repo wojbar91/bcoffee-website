@@ -11,6 +11,12 @@ const OG_HEIGHT = 630;
 export const FALLBACK_SITE_NAME = "B. Coffee";
 
 /**
+ * Tytuł strony 404. `noindex` dokłada Next sam dla każdej odpowiedzi 404,
+ * więc wystarczy, żeby zakładka mówiła prawdę.
+ */
+export const NOT_FOUND_METADATA: Metadata = { title: "Nie znaleziono strony" };
+
+/**
  * Zdjęcie do podglądu linku. Bierzemy hero danej strony i każemy CDN-owi Sanity
  * przyciąć je do 1200×630 — bez tego serwowalibyśmy oryginał, często kilka MB,
  * którego i tak żaden komunikator nie pokaże w pełnej rozdzielczości.
@@ -58,8 +64,12 @@ export function pageMetadata({ title, description, path, photo, siteName }: Page
   const image = ogImage(photo, title);
   const url = absoluteUrl(path);
 
+  // Layout dokleja „ — {siteName}" do każdego tytułu. Jeśli ktoś w Studio dopisał nazwę
+  // firmy już sam („… | B. Coffee"), szablon zdublowałby ją — wtedy tytuł idzie bez szablonu.
+  const hasBrand = title.toLocaleLowerCase("pl").includes(siteName.toLocaleLowerCase("pl"));
+
   return {
-    title,
+    title: hasBrand ? { absolute: title } : title,
     description: description ?? undefined,
     alternates: { canonical: url },
     openGraph: {
